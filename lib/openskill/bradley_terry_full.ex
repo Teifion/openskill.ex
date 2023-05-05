@@ -2,9 +2,9 @@ defmodule Openskill.BradleyTerryFull do
   alias Openskill.{Environment, Util}
 
   @env %Environment{}
-  @twobetasq 2 * @env.beta * @env.beta
 
-  def rate(game, _options \\ []) do
+  def rate(game, options \\ %{:beta => @env.beta, :epsilon => @env.epsilon}) do
+    twobetasq = 2 * options.beta * options.beta
     team_ratings = Util.team_rating(game)
 
     Enum.map(team_ratings, fn {teami_mu, teami_sigmasq, teami, ranki} ->
@@ -12,7 +12,7 @@ defmodule Openskill.BradleyTerryFull do
         team_ratings
         |> Enum.filter(fn {_, _, _, rankq} -> ranki != rankq end)
         |> Enum.reduce({0, 0}, fn {teamq_mu, teamq_sigmasq, _, rankq}, {omega, delta} ->
-          ciq = Math.sqrt(teami_sigmasq + teamq_sigmasq + @twobetasq)
+          ciq = Math.sqrt(teami_sigmasq + teamq_sigmasq + twobetasq)
           piq = 1 / (1 + Math.exp((teamq_mu - teami_mu) / ciq))
           sigsq_to_ciq = teami_sigmasq / ciq
           gamma = Math.sqrt(teami_sigmasq) / ciq
@@ -28,7 +28,7 @@ defmodule Openskill.BradleyTerryFull do
 
         {
           muij + sigmaijsq / teami_sigmasq * omegai,
-          sigmaij * Math.sqrt(max(1 - sigmaijsq / teami_sigmasq * deltai, @env.epsilon))
+          sigmaij * Math.sqrt(max(1 - sigmaijsq / teami_sigmasq * deltai, options.epsilon))
         }
       end
     end)

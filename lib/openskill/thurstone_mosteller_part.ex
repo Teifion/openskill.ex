@@ -2,10 +2,9 @@ defmodule Openskill.ThurstoneMostellerPart do
   alias Openskill.{Environment, Util}
 
   @env %Environment{}
-  @twobetasq 2 * @env.beta * @env.beta
-  @epsilon 0.1
 
-  def rate(game, _options \\ []) do
+  def rate(game, options \\ %{:beta => @env.beta, :epsilon => 0.1}) do
+    twobetasq = 2 * options.beta * options.beta
     team_ratings = Util.team_rating(game)
     adjacent_teams = Util.ladder_pairs(team_ratings)
 
@@ -16,7 +15,7 @@ defmodule Openskill.ThurstoneMostellerPart do
         teami_adjacent
         |> Enum.filter(fn {_, _, _, rankq} -> ranki != rankq end)
         |> Enum.reduce({0, 0}, fn {teamq_mu, teamq_sigmasq, _, rankq}, {omega, delta} ->
-          ciq = Math.sqrt(teami_sigmasq + teamq_sigmasq + @twobetasq)
+          ciq = Math.sqrt(teami_sigmasq + teamq_sigmasq + twobetasq)
           tmp = (teami_mu - teamq_mu) / ciq
           sigsq_to_ciq = teami_sigmasq / ciq
           gamma = Math.sqrt(teami_sigmasq) / ciq
@@ -24,14 +23,14 @@ defmodule Openskill.ThurstoneMostellerPart do
           cond do
             rankq > ranki ->
               {
-                omega + sigsq_to_ciq * Util.v(tmp, @epsilon / ciq),
-                delta + gamma * sigsq_to_ciq / ciq * Util.w(tmp, @epsilon / ciq)
+                omega + sigsq_to_ciq * Util.v(tmp, options.epsilon / ciq),
+                delta + gamma * sigsq_to_ciq / ciq * Util.w(tmp, options.epsilon / ciq)
               }
 
             rankq < ranki ->
               {
-                omega + -sigsq_to_ciq * Util.v(-tmp, @epsilon / ciq),
-                delta + gamma * sigsq_to_ciq / ciq * Util.w(-tmp, @epsilon / ciq)
+                omega + -sigsq_to_ciq * Util.v(-tmp, options.epsilon / ciq),
+                delta + gamma * sigsq_to_ciq / ciq * Util.w(-tmp, options.epsilon / ciq)
               }
 
             # the filter above ensures that rankq and ranki are never the same,
@@ -41,8 +40,8 @@ defmodule Openskill.ThurstoneMostellerPart do
             # coveralls-ignore-start
             true ->
               {
-                omega + sigsq_to_ciq * Util.vt(tmp, @epsilon / ciq),
-                delta + gamma * sigsq_to_ciq / ciq * Util.wt(tmp, @epsilon / ciq)
+                omega + sigsq_to_ciq * Util.vt(tmp, options.epsilon / ciq),
+                delta + gamma * sigsq_to_ciq / ciq * Util.wt(tmp, options.epsilon / ciq)
               }
 
               # coveralls-ignore-stop
@@ -54,7 +53,7 @@ defmodule Openskill.ThurstoneMostellerPart do
 
         {
           muij + sigmaijsq / teami_sigmasq * omegai,
-          sigmaij * Math.sqrt(max(1 - sigmaijsq / teami_sigmasq * deltai, @env.epsilon))
+          sigmaij * Math.sqrt(max(1 - sigmaijsq / teami_sigmasq * deltai, options.epsilon))
         }
       end
     end)
