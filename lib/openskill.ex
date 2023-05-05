@@ -32,7 +32,9 @@ defmodule Openskill do
       ranks: Util.default_ranks(rating_groups),
       model: Openskill.PlackettLuce,
       tau: @env.tau,
-      prevent_sigma_increase: @env.prevent_sigma_increase
+      beta: @env.beta,
+      prevent_sigma_increase: @env.prevent_sigma_increase,
+      epsilon: @env.epsilon
     ]
 
     options = Keyword.merge(defaults, options) |> Enum.into(%{})

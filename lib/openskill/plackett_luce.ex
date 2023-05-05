@@ -2,14 +2,15 @@ defmodule Openskill.PlackettLuce do
   alias Openskill.{Environment, Util}
 
   @env %Environment{}
-  @betasq @env.beta * @env.beta
 
-  def rate(game, _options \\ []) do
+  def rate(game, options \\ %{:beta => @env.beta}) do
     team_ratings = Util.team_rating(game)
+
+    betasq = options.beta * options.beta
 
     c =
       Enum.map(team_ratings, fn {_, team_sigmasq, _, _} ->
-        team_sigmasq + @betasq
+        team_sigmasq + betasq
       end)
       |> Enum.sum()
       |> Math.sqrt()

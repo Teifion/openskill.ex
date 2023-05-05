@@ -165,7 +165,8 @@ defmodule OpenskillTest do
       [[a2], [b2], [c2], [d2]] =
         Openskill.rate(
           [[a1], [b1], [c1], [d1]],
-          model: Openskill.ThurstoneMostellerPart
+          model: Openskill.ThurstoneMostellerPart,
+          epsilon: 0.1
         )
 
       assert [
